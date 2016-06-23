@@ -3,6 +3,7 @@
 #               Matthew Harrigan <matthew.p.harrigan@gmail.com>
 #               Brooke Husic <brookehusic@gmail.com>,
 #               Muneeb Sultan <msultan@stanford.edu>
+#               Robin Betz <robin@robinbetz.com>
 # Copyright (c) 2016, Stanford University and the Authors
 # All rights reserved.
 
@@ -963,6 +964,96 @@ class ContactFeaturizer(Featurizer):
 
         return feature_descs
 
+class MultiligandContactFeaturizer(Featurizer):
+    """Featurizer based on residue-residue distances
+
+    This featurizer transforms a dataset containing MD trajectories into
+    a vector dataset by representing each frame in each of the MD trajectories
+    by a vector of the distances between pairs of amino-acid residues.
+    
+    Multiple ligands are treated independently, resulting in multiple
+    feature sets from one trajectory, one for each ligand. A vector of
+    distances between the ligand and each amino acid residue is returned.
+
+    The exact method for computing the the distance between two residues
+    is configurable with the ``scheme`` parameter.
+
+    Parameters
+    ----------
+    ligands : list of str
+        list of ligand residue names to compute contacts between
+    scheme : {'ca', 'closest', 'closest-heavy'}
+        scheme to determine the distance between two residues:
+            'ca' : distance between two residues is given by the distance
+                between their alpha carbons
+            'closest' : distance is the closest distance between any
+                two atoms in the residues
+            'closest-heavy' : distance is the closest distance between
+                any two non-hydrogen atoms in the residues
+    """
+
+    def __init__(self, ligands, scheme='closest-heavy'):
+        self.ligands = ligands
+        self.scheme = scheme
+        self.contacts = []
+
+    def partial_transform(self, traj):
+        """Featurize an MD trajectory into a vector space via of residue-residue
+        distances. For this featurizer multiple vectors will be returned,
+        one for each ligand.
+
+        Parameters
+        ----------
+        traj : mdtraj.Trajectory
+            A molecular dynamics trajectory to featurize.
+
+        Returns
+        -------
+        features : np.ndarray, dtype=float, shape=(n_samples, n_features)
+            A featurized trajectory is a 2D array of shape
+            `(length_of_trajectory x n_features)` where each `features[i]`
+            vector is computed by applying the featurization function
+            to the `i`th snapshot of the input trajectory.
+
+        See Also
+        --------
+        transform : simultaneously featurize a collection of MD trajectories
+        """
+        ligand_atoms = traj.topology.select("resname %s " %
+                                            " or resname ".join(self.ligands))
+        ligand_residues = [r.index for r in traj.topology.residues if \
+                           any(l in [_.index for _ in r.atoms] \
+                               for l in ligand_atoms)]
+
+        protein_residues = [r.index for r in traj.topology.residues if \
+                            any(l in [_.index for _ in r.atoms] \
+                                for l in traj.topology.select("protein"))]
+
+        distances = [md.compute_contacts(traj, [[x,l] for x in protein_residues],
+                                          self.scheme,
+                                          ignore_nonprotein=True)[0] \
+                     for l in ligand_residues]
+        return distances 
+
+    def transform(self, traj_list, y=None):
+        """Featurize a several trajectories.
+
+        Parameters
+        ----------
+        traj_list : list(mdtraj.Trajectory)
+            Trajectories to be featurized.
+
+        Returns
+        -------
+        features : list(np.ndarray), length = len(traj_list)
+            The featurized trajectories.  features[i] is the featurized
+            version of traj_list[i] and has shape
+            (n_samples_i, n_features)
+        """
+        transformed = []
+        for traj in traj_list:
+            transformed.extend(self.partial_transform(traj))
+        return transformed
 
 class GaussianSolventFeaturizer(Featurizer):
     """Featurizer on weighted pairwise distance between solute and solvent.
