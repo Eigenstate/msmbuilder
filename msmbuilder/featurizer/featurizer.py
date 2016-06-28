@@ -1057,10 +1057,6 @@ class MultiligandContactFeaturizer(Featurizer):
         """
         ligand_residues = [r.index for r in traj.topology.residues if
                            any(r.name==l for l in self.ligands)]
-        print("LIGAND RESIDUES: %s" % ligand_residues)
-        print("I got %d of em!" % len(ligand_residues))
-        print([[a.name for a in res.atoms] for res in traj.topology.residues if res.name == 'ALP'])
-        print([res.n_atoms for res in traj.topology.residues if res.name == 'ALP'])
 
         protein_residues = [r.index for r in traj.topology.residues if \
                             any(l in [_.index for _ in r.atoms] \
