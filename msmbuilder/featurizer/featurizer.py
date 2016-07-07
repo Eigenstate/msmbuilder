@@ -1028,10 +1028,11 @@ class MultiligandContactFeaturizer(Featurizer):
                 any two non-hydrogen atoms in the residues
     """
 
-    def __init__(self, ligands, scheme='closest-heavy'):
+    def __init__(self, ligands, scheme='closest-heavy', protein=None):
         self.ligands = ligands
         self.scheme = scheme
         self.contacts = []
+        self.protein = protein
 
     def partial_transform(self, traj):
         """Featurize an MD trajectory into a vector space via of residue-residue
@@ -1058,9 +1059,13 @@ class MultiligandContactFeaturizer(Featurizer):
         ligand_residues = [r.index for r in traj.topology.residues if
                            any(r.name==l for l in self.ligands)]
 
-        protein_residues = [r.index for r in traj.topology.residues if \
-                            any(l in [_.index for _ in r.atoms] \
-                                for l in traj.topology.select("protein"))]
+        if not self.protein:
+            protein_residues = [r.index for r in traj.topology.residues if \
+                                any(l in [_.index for _ in r.atoms] \
+                                    for l in traj.topology.select("protein"))]
+        else:
+            protein_residues = self.protein
+                                
 
         distances = [md.compute_contacts(traj, [[x,l] for x in protein_residues],
                                           self.scheme,
