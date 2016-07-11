@@ -1067,11 +1067,48 @@ class MultiligandContactFeaturizer(Featurizer):
             protein_residues = self.protein
                                 
 
-        distances = [md.compute_contacts(traj, [[x,l] for x in protein_residues],
-                                          self.scheme,
-                                          ignore_nonprotein=True)[0] \
-                     for l in ligand_residues]
+#        distances = [md.compute_contacts(traj, [[x,l] for x in protein_residues],
+#                                          self.scheme,
+#                                          ignore_nonprotein=True)[0] \
+#                     for l in ligand_residues]
+        distances = []
+        for lres in ligand_residues:
+            ligand_atoms = [a.index for a in traj.topology.residue(lres).atoms if \
+                            not (a.element == md.core.element.hydrogen)]
+            distances.append(self._compute_min_distances(ligand_atoms,
+                                                         protein_residues, traj))
+                     
         return distances 
+
+    def _compute_min_distances(self, ligand_atoms, protein_residues, traj):
+        """
+        Computes the minimum distance from a given ligand atom to any
+        atom of each protein residue. Based off mdtraj's compute_contacts
+        """
+        protein_membership = [[a.index for a in traj.topology.residue(r).atoms
+                               if not (a.element == md.core.element.hydrogen)]
+                              for r in protein_residues]
+        protein_lens = [len(x) for x in protein_membership]
+       
+        # Compute all distances
+        raws = []
+        for latom in ligand_atoms:
+            atom_pairs = []
+            for res in range(len(protein_residues)):
+                atom_pairs.extend([(ratom, latom) for ratom in protein_membership[res]])
+
+            atom_distances = md.compute_distances(traj, atom_pairs, periodic=True)
+
+            # Now squash distances based on residue membership
+            distances = np.zeros((len(traj), len(protein_residues)), dtype=np.float32)
+
+            for i in range(len(protein_residues)):
+                index = int(np.sum(protein_lens[:i]))
+                distances[:, i] = atom_distances[:, index:index+protein_lens[i]].min(axis=1)
+            raws.append(distances)
+    
+        return np.hstack(raws)
+
 
     def transform(self, traj_list, y=None):
         """Featurize a several trajectories.
