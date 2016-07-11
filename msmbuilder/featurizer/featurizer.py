@@ -1091,23 +1091,20 @@ class MultiligandContactFeaturizer(Featurizer):
         protein_lens = [len(x) for x in protein_membership]
        
         # Compute all distances
-        raws = []
+        atom_pairs = []
         for latom in ligand_atoms:
-            atom_pairs = []
             for res in range(len(protein_residues)):
                 atom_pairs.extend([(ratom, latom) for ratom in protein_membership[res]])
 
-            atom_distances = md.compute_distances(traj, atom_pairs, periodic=True)
+        atom_distances = md.compute_distances(traj, atom_pairs, periodic=True)
 
-            # Now squash distances based on residue membership
-            distances = np.zeros((len(traj), len(protein_residues)), dtype=np.float32)
+        # Now squash distances based on residue membership
+        distances = np.zeros((len(traj), len(ligand_atoms)*len(protein_residues)), dtype=np.float32)
 
-            for i in range(len(protein_residues)):
-                index = int(np.sum(protein_lens[:i]))
-                distances[:, i] = atom_distances[:, index:index+protein_lens[i]].min(axis=1)
-            raws.append(distances)
-    
-        return np.hstack(raws)
+        for i in range(len(protein_residues)*len(ligand_atoms)):
+            index = int(np.sum(protein_lens[:i]))
+            distances[:, i] = atom_distances[:, index:index+protein_lens[i%len(ligand_atoms)]].min(axis=1)
+        return distances
 
 
     def transform(self, traj_list, y=None):
