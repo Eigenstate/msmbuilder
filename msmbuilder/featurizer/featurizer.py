@@ -1071,10 +1071,10 @@ class MultiligandContactFeaturizer(Featurizer):
 #                                          ignore_nonprotein=True)[0] \
 #                     for l in ligand_residues]
         distances = []
-        for lres in ligand_residues:
+        for lres in sorted(ligand_residues):
             ligand_atoms = [a.index for a in traj.topology.residue(lres).atoms if \
                             not (a.element == md.core.element.hydrogen)]
-            distances.append(self._compute_min_distances(ligand_atoms,
+            distances.append(self._compute_min_distances(sorted(ligand_atoms),
                                                          protein_residues, traj))
                      
         return distances 
