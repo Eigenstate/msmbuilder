@@ -1060,9 +1060,8 @@ class MultiligandContactFeaturizer(Featurizer):
                            any(r.name==l for l in self.ligands)]
 
         if not self.protein:
-            protein_residues = [r.index for r in traj.topology.residues if \
-                                any(l in [_.index for _ in r.atoms] \
-                                    for l in traj.topology.select("protein"))]
+            protein_residues = list(set[traj.topology.atom(a).residue.index \
+                                        for a in traj.topology.select("protein")])
         else:
             protein_residues = self.protein
                                 
