@@ -1005,7 +1005,7 @@ class MultiligandContactFeaturizer(Featurizer):
 
     This featurizer transforms a dataset containing MD trajectories into
     a vector dataset by representing each frame in each of the MD trajectories
-    by a vector of the distances between pairs of amino-acid residues.
+    by a vector of the log distances between pairs of amino-acid residues.
     
     Multiple ligands are treated independently, resulting in multiple
     feature sets from one trajectory, one for each ligand. A vector of
@@ -1103,7 +1103,7 @@ class MultiligandContactFeaturizer(Featurizer):
         for i in range(len(protein_residues)*len(ligand_atoms)):
             index = int(np.sum(protein_lens[:i]))
             distances[:, i] = atom_distances[:, index:index+protein_lens[i%len(ligand_atoms)]].min(axis=1)
-        return distances
+        return np.log(distances)
 
 
     def transform(self, traj_list, y=None):
