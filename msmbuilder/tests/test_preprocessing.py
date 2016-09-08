@@ -52,8 +52,8 @@ from ..preprocessing import (Binarizer, Imputer, KernelCenterer,
 
 
 random = np.random.RandomState(42)
-trajs = [random.randn(10, 3) for _ in range(5)]
-labels = [random.randint(low=0, high=5, size=10).reshape(-1, 1)
+trajs = [random.randn(100, 3) for _ in range(5)]
+labels = [random.randint(low=0, high=5, size=100).reshape(-1, 1)
           for _ in range(5)]
 
 

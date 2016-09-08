@@ -232,6 +232,9 @@ class Command(with_metaclass(abc.ABCMeta, object)):
     # Set _concrete to true for all final classes in the heirarchy
     _concrete = False
 
+    def __init__(self, args):
+        pass
+
     @classmethod
     def _get_name(cls):
         if hasattr(cls, 'name'):
@@ -490,7 +493,7 @@ class App(object):
                     klass_description = klass_description()
 
                 first_sentence = ' '.join(
-                    ' '.join(re.split(r'(?<=[.:;])\s', klass_description)[:1]).split())
+                    ' '.join(re.split(r'(?<=[.;])\s', klass_description)[:1]).split())
                 description = klass_description
                 subparser = subparsers.add_parser(
                     klass._get_name(), help=first_sentence, description=description,

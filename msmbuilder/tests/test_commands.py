@@ -7,7 +7,6 @@ import os
 import shlex
 import shutil
 import subprocess
-import sys
 import tempfile
 
 import hmmlearn.hmm
@@ -17,9 +16,7 @@ from mdtraj.testing import eq
 from mdtraj.testing import get_fn as get_mdtraj_fn
 
 from msmbuilder.dataset import dataset
-from msmb_data import get_data_home
-from msmb_data.alanine_dipeptide import \
-    fetch_alanine_dipeptide
+from msmbuilder.example_datasets import get_data_home
 from msmbuilder.utils import load
 
 DATADIR = HMM = None
@@ -54,7 +51,7 @@ def setup_module():
         t = md.Trajectory(xyz=d.reshape(len(d), 1, 3), topology=topology)
         t.save(os.path.join(DATADIR, 'Trajectory%d.h5' % i))
 
-    fetch_alanine_dipeptide()
+    assert os.path.exists("{}/alanine_dipeptide".format(get_data_home()))
 
 
 def teardown_module():
@@ -73,19 +70,17 @@ class tempdir(object):
 
 
 def shell(str):
-    # Capture stdout
-    if sys.platform == 'win32':
-        split = str.split()
-    else:
-        split = shlex.split(str)
-    print(split)
-    with open(os.devnull, 'w') as noout:
-        assert subprocess.call(split,
-                               stderr=subprocess.STDOUT,
-                               stdout=noout) == 0
+    split = shlex.split(str, posix=False)
+    try:
+        subprocess.check_output(split, stderr=subprocess.STDOUT,
+                                universal_newlines=True)
+    except subprocess.CalledProcessError as e:
+        print(e.cmd)
+        print(e.output)
+        raise
 
 
-def test_atomindices():
+def test_atomindices_1():
     fn = get_mdtraj_fn('2EQQ.pdb')
     t = md.load(fn)
     with tempdir():
@@ -96,6 +91,10 @@ def test_atomindices():
         eq(t.n_atoms, len(atoms))
         eq(int(t.n_atoms * (t.n_atoms - 1) / 2), len(pairs))
 
+
+def test_atomindices_2():
+    fn = get_mdtraj_fn('2EQQ.pdb')
+    t = md.load(fn)
     with tempdir():
         shell('msmb AtomIndices -o heavy.txt --heavy -a -p %s' % fn)
         shell('msmb AtomIndices -o heavy-pairs.txt --heavy -d -p %s' % fn)
@@ -106,6 +105,10 @@ def test_atomindices():
                 len(atoms))
         eq(np.array(list(itertools.combinations(atoms, 2))), pairs)
 
+
+def test_atomindices_3():
+    fn = get_mdtraj_fn('2EQQ.pdb')
+    t = md.load(fn)
     with tempdir():
         shell('msmb AtomIndices -o alpha.txt --alpha -a -p %s' % fn)
         shell('msmb AtomIndices -o alpha-pairs.txt --alpha -d -p %s' % fn)
@@ -115,6 +118,10 @@ def test_atomindices():
         assert sum(1 for a in t.topology.atoms if a.name == 'CA') == len(atoms)
         eq(np.array(list(itertools.combinations(atoms, 2))), pairs)
 
+
+def test_atomindices_4():
+    fn = get_mdtraj_fn('2EQQ.pdb')
+    t = md.load(fn)
     with tempdir():
         shell('msmb AtomIndices -o minimal.txt --minimal -a -p %s' % fn)
         shell('msmb AtomIndices -o minimal-pairs.txt --minimal -d -p %s' % fn)
@@ -204,16 +211,11 @@ def test_help():
 
 
 def test_convert_chunked_project_1():
-    fetch_alanine_dipeptide()
     with tempdir():
         root = os.path.join(get_data_home(), 'alanine_dipeptide')
-        if sys.platform == 'win32':
-            pattern = "*.dcd"
-        else:
-            pattern = "'*.dcd'"
-        cmd = ('msmb ConvertChunkedProject out {root} --pattern {pattern} '
-               '-t {root}/ala2.pdb'
-               .format(root=root, pattern=pattern))
+        assert os.path.exists(root)
+        cmd = ("msmb ConvertChunkedProject out {root} --pattern *.dcd "
+               "-t {root}/ala2.pdb".format(root=root))
         shell(cmd)
         assert set(os.listdir('out')) == {'traj-00000000.dcd',
                                           'trajectories.jsonl'}
