@@ -167,7 +167,8 @@ class PCCAPlus(PCCA):
 
         alpha = scipy.optimize.fmin(
                 obj, alpha, full_output=True, xtol=1E-4, ftol=1E-4,
-                maxfun=5000, maxiter=100000
+                #maxfun=5000, maxiter=100000
+                maxfun=50000, maxiter=1000000
         )[0]
 
         if np.isneginf(obj(alpha)):
