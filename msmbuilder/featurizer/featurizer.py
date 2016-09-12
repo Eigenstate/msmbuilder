@@ -1079,7 +1079,7 @@ class MultiligandContactFeaturizer(Featurizer):
                      
         return distances 
 
-    def _compute_min_distances(self, ligand_atoms, protein_residues, traj):
+    def _compute_min_distances(self, ligand_atoms, protein_residues, traj, log=True):
         """
         Computes the minimum distance from a given ligand atom to any
         atom of each protein residue. Based off mdtraj's compute_contacts
@@ -1103,8 +1103,10 @@ class MultiligandContactFeaturizer(Featurizer):
         for i in range(len(protein_residues)*len(ligand_atoms)):
             index = int(np.sum(protein_lens[:i]))
             distances[:, i] = atom_distances[:, index:index+protein_lens[i%len(ligand_atoms)]].min(axis=1)
-        return np.log(distances)
-
+        if log:
+            return np.log(distances)
+        else:
+            return distances
 
     def transform(self, traj_list, y=None):
         """Featurize a several trajectories.
