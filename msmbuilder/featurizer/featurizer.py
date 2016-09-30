@@ -453,13 +453,17 @@ class DihedralFeaturizer(Featurizer):
     sincos : bool
         Instead of outputting the angle, return the sine and cosine of the
         angle as separate features.
+    chains : list of int
+        Which chains to featurize by dihedrals. If 'None', will featurize
+        all protein chains
     """
 
-    def __init__(self, types=['phi', 'psi'], sincos=True):
+    def __init__(self, types=['phi', 'psi'], sincos=True, chains=None):
         if isinstance(types, str):
             types = [types]
         self.types = list(types)  # force a copy
         self.sincos = sincos
+        self.chains = chains
 
         known = {'phi', 'psi', 'omega', 'chi1', 'chi2', 'chi3', 'chi4'}
         if not set(types).issubset(known):
@@ -495,7 +499,7 @@ class DihedralFeaturizer(Featurizer):
             func = getattr(md, 'compute_%s' % dihed_type)
             # ainds is a list of four-tuples of atoms participating
             # in each dihedral
-            aind_tuples, _ = func(traj)
+            aind_tuples, _ = func(traj, chains=self.chains)
             top = traj.topology
             zippy = zippy_maker(aind_tuples, top)
 
@@ -532,7 +536,7 @@ class DihedralFeaturizer(Featurizer):
         x = []
         for a in self.types:
             func = getattr(md, 'compute_%s' % a)
-            _, y = func(traj)
+            _, y = func(traj, chains=self.chains)
 
             if self.sincos:
                 x.extend([np.sin(y), np.cos(y)])
