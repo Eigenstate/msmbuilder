@@ -1036,12 +1036,13 @@ class MultiligandContactFeaturizer(Featurizer):
     """
 
     def __init__(self, ligands, scheme='closest-heavy', protein=None,
-                 scaling_function=None):
+                 scaling_function=None, log=False):
         self.ligands = ligands
         self.scheme = scheme
         self.contacts = []
         self.protein = protein
         self.scaling_function = scaling_function
+        self.log = log
 
     def partial_transform(self, traj):
         """Featurize an MD trajectory into a vector space via of residue-residue
@@ -1082,8 +1083,11 @@ class MultiligandContactFeaturizer(Featurizer):
             raw_dists = self._compute_min_distances(sorted(ligand_atoms),
                       -                             protein_residues, traj)
             distances.append(self.scaling_function(ligand_com, raw_dists))
-                     
-        return distances 
+        
+        if self.log:
+            return np.log(distances)
+        else:
+            return distances 
 
     def _compute_min_distances(self, ligand_atoms, protein_residues, traj):
         """
@@ -1109,6 +1113,7 @@ class MultiligandContactFeaturizer(Featurizer):
         for i in range(len(protein_residues)*len(ligand_atoms)):
             index = int(np.sum(protein_lens[:i]))
             distances[:, i] = atom_distances[:, index:index+protein_lens[i%len(ligand_atoms)]].min(axis=1)
+
         return distances
 
     def transform(self, traj_list, y=None):
