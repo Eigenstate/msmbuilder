@@ -1081,7 +1081,7 @@ class MultiligandContactFeaturizer(Featurizer):
                             not (a.element == md.core.element.hydrogen)]
             ligand_com = md.compute_center_of_mass(traj, ligand_atoms)
             raw_dists = self._compute_min_distances(sorted(ligand_atoms),
-                      -                             protein_residues, traj)
+                                                    protein_residues, traj)
             distances.append(self.scaling_function(ligand_com, raw_dists))
         
         if self.log:
