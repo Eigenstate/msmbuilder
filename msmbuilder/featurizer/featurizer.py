@@ -1030,13 +1030,18 @@ class MultiligandContactFeaturizer(Featurizer):
                 two atoms in the residues
             'closest-heavy' : distance is the closest distance between
                 any two non-hydrogen atoms in the residues
+    scaling_function : function handle
+        Function of ligand center of mass and min distances that will
+        do the switching or something
     """
 
-    def __init__(self, ligands, scheme='closest-heavy', protein=None):
+    def __init__(self, ligands, scheme='closest-heavy', protein=None,
+                 scaling_function=None):
         self.ligands = ligands
         self.scheme = scheme
         self.contacts = []
         self.protein = protein
+        self.scaling_function = scaling_function
 
     def partial_transform(self, traj):
         """Featurize an MD trajectory into a vector space via of residue-residue
@@ -1073,12 +1078,14 @@ class MultiligandContactFeaturizer(Featurizer):
         for lres in sorted(ligand_residues):
             ligand_atoms = [a.index for a in traj.topology.residue(lres).chain.atoms if \
                             not (a.element == md.core.element.hydrogen)]
-            distances.append(self._compute_min_distances(sorted(ligand_atoms),
-                                                         protein_residues, traj))
+            ligand_com = md.compute_center_of_mass(traj, ligand_atoms)
+            raw_dists = self._compute_min_distances(sorted(ligand_atoms),
+                      -                             protein_residues, traj)
+            distances.append(self.scaling_function(ligand_com, raw_dists))
                      
         return distances 
 
-    def _compute_min_distances(self, ligand_atoms, protein_residues, traj, log=True):
+    def _compute_min_distances(self, ligand_atoms, protein_residues, traj):
         """
         Computes the minimum distance from a given ligand atom to any
         atom of each protein residue. Based off mdtraj's compute_contacts
@@ -1102,10 +1109,7 @@ class MultiligandContactFeaturizer(Featurizer):
         for i in range(len(protein_residues)*len(ligand_atoms)):
             index = int(np.sum(protein_lens[:i]))
             distances[:, i] = atom_distances[:, index:index+protein_lens[i%len(ligand_atoms)]].min(axis=1)
-        if log:
-            return np.log(distances)
-        else:
-            return distances
+        return distances
 
     def transform(self, traj_list, y=None):
         """Featurize a several trajectories.
