@@ -1082,7 +1082,8 @@ class MultiligandContactFeaturizer(Featurizer):
             ligand_com = md.compute_center_of_mass(traj, ligand_atoms)
             raw_dists = self._compute_min_distances(sorted(ligand_atoms),
                                                     protein_residues, traj)
-            distances.append(self.scaling_function(ligand_com, raw_dists))
+            if self.scaling_function:
+                distances.append(self.scaling_function(ligand_com, raw_dists))
         
         if self.log:
             return np.log(distances)
