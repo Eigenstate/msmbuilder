@@ -1084,6 +1084,8 @@ class MultiligandContactFeaturizer(Featurizer):
                                                     protein_residues, traj)
             if self.scaling_function:
                 distances.append(self.scaling_function(ligand_com, raw_dists))
+            else:
+                distances.append(raw_dists)
         
         if self.log:
             return np.log(distances)
