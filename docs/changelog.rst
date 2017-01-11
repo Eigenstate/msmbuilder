@@ -6,6 +6,39 @@ Changelog
 v3.7 (development)
 ------------------
 
+API Changes
+~~~~~~~~~~~
+
+- ``TrajFeatureUnion`` and ``SubsetFeatureUnion`` have been removed due to
+  incompatibilities with the ``scikit-learn`` API.
+
+
+New Features
+~~~~~~~~~~~~
+
+- ``KSparseTICA`` lets you specify the number of non-zero entries, ``k``
+  rather than a regularization strength (gh-916).
+- ``BootStrapMarkovStateModel`` optionally saves all the models that it
+  generates (gh-919).
+- ``tICA`` supports commute mapping (see 10.1021/acs.jctc.6b00762)
+  (gh-925).
+- ``CommonContactFeaturizer`` featurizes different trajectories with
+  different topologies using a common set of inter-residue contacts
+  (gh-876).
+- ``msmbuilder.tpt.mfpt.mfpts`` can now compute distributions of MFPTs, accounting
+  for the model error due to finite sampling.
+- Three new featurization schemes for protein-ligand trajectories are
+  now available: ``LigandContactFeaturizer``,
+  ``BinaryLigandContactFeaturizer``, and ``LigandRMSDFeaturizer`` (gh-883).
+
+
+Improvements
+~~~~~~~~~~~~
+
+- Compatibility with scikit-learn 0.18 (gh-915).
+- ``FeatureSelector`` feature order is deterministic (gh-920).
+- ``SASAFeaturizer`` supports the ``describe_features`` method (gh-913).
+
 
 v3.6 (September 15, 2016)
 -------------------------
