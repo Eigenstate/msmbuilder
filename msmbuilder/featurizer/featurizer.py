@@ -1180,6 +1180,10 @@ class MultiligandContactFeaturizer(Featurizer):
         """
         ligand_residues = [r.index for r in traj.topology.residues if
                            any(r.name==l for l in self.ligands)]
+        
+        # Obtain molecules here because we find molecules with ligand
+        # attached to featurize
+        molecules = traj.topology.find_molecules()
 
         if not self.protein:
             protein_residues = list(set([traj.topology.atom(a).residue.index \
@@ -1189,9 +1193,14 @@ class MultiligandContactFeaturizer(Featurizer):
                                 
         distances = []
         for lres in sorted(ligand_residues):
-            ligand_atoms = [a.index for a in traj.topology.residue(lres).chain.atoms if \
+            # Find molecule containing this ligand residue
+            mol = [m for m in molecules if traj.topology.residue(lres).atom(0) in m]
+            if len(mol) != 1:
+                raise ValueError("Can't find molecule for residue %d" % lres)
+            
+            ligand_atoms = [a.index for a in mol[0] if \
                             not (a.element == md.core.element.hydrogen)]
-            ligand_com = md.compute_center_of_mass(traj, ligand_atoms)
+
             raw_dists = self._compute_min_distances(sorted(ligand_atoms),
                                                     protein_residues, traj)
             if self.scaling_function:
