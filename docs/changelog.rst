@@ -3,15 +3,32 @@
 Changelog
 =========
 
-v3.7 (development)
+v3.8 (development)
 ------------------
+
+API Changes
+~~~~~~~~~~~
+
+New Features
+~~~~~~~~~~~~
+
+Improvements
+~~~~~~~~~~~~
+
+
+v3.7 (January 26, 2017)
+-----------------------
+
+We're pleased to announce the release of MSMBuilder 3.7. This release
+introduces several new featurizers that can handle multiple sequences or 
+multiple chains within a topology file. There are also some bugfixes and
+API hygiene improvements. We recommend all users upgrade to MSMBuilder 3.7.
 
 API Changes
 ~~~~~~~~~~~
 
 - ``TrajFeatureUnion`` and ``SubsetFeatureUnion`` have been removed due to
   incompatibilities with the ``scikit-learn`` API.
-
 
 New Features
 ~~~~~~~~~~~~
@@ -31,13 +48,14 @@ New Features
   now available: ``LigandContactFeaturizer``,
   ``BinaryLigandContactFeaturizer``, and ``LigandRMSDFeaturizer`` (gh-883).
 
-
 Improvements
 ~~~~~~~~~~~~
 
 - Compatibility with scikit-learn 0.18 (gh-915).
 - ``FeatureSelector`` feature order is deterministic (gh-920).
 - ``SASAFeaturizer`` supports the ``describe_features`` method (gh-913).
+- All ``LandmarkAgglomerative`` clusterers now have ``cluster_centers_`` except
+  when ``metric = rmsd`` (gh-958)
 
 
 v3.6 (September 15, 2016)
