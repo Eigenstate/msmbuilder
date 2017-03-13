@@ -1122,7 +1122,7 @@ class MultiligandContactFeaturizer(Featurizer):
     This featurizer transforms a dataset containing MD trajectories into
     a vector dataset by representing each frame in each of the MD trajectories
     by a vector of the log distances between pairs of amino-acid residues.
-    
+
     Multiple ligands are treated independently, resulting in multiple
     feature sets from one trajectory, one for each ligand. A vector of
     distances between the ligand and each amino acid residue is returned.
@@ -1180,7 +1180,7 @@ class MultiligandContactFeaturizer(Featurizer):
         """
         ligand_residues = [r.index for r in traj.topology.residues if
                            any(r.name==l for l in self.ligands)]
-        
+
         # Obtain molecules here because we find molecules with ligand
         # attached to featurize
         molecules = traj.topology.find_molecules()
@@ -1190,28 +1190,29 @@ class MultiligandContactFeaturizer(Featurizer):
                                          for a in traj.topology.select("protein")]))
         else:
             protein_residues = self.protein
-                                
+
         distances = []
         for lres in sorted(ligand_residues):
             # Find molecule containing this ligand residue
             mol = [m for m in molecules if traj.topology.residue(lres).atom(0) in m]
             if len(mol) != 1:
                 raise ValueError("Can't find molecule for residue %d" % lres)
-            
+
             ligand_atoms = [a.index for a in mol[0] if \
                             not (a.element == md.core.element.hydrogen)]
 
+            ligand_com = md.compute_center_of_mass(traj, ligand_atoms)
             raw_dists = self._compute_min_distances(sorted(ligand_atoms),
                                                     protein_residues, traj)
-            if self.scaling_function:
+            if self.scaling_function is not None:
                 distances.append(self.scaling_function(ligand_com, raw_dists))
             else:
                 distances.append(raw_dists)
-        
+
         if self.log:
             return np.log(distances)
         else:
-            return distances 
+            return distances
 
     def _compute_min_distances(self, ligand_atoms, protein_residues, traj):
         """
@@ -1222,7 +1223,7 @@ class MultiligandContactFeaturizer(Featurizer):
                                if not (a.element == md.core.element.hydrogen)]
                               for r in protein_residues]
         protein_lens = [len(x) for x in protein_membership]
-       
+
         # Compute all distances
         atom_pairs = []
         for latom in ligand_atoms:
