@@ -11,9 +11,13 @@ API Changes
 
 New Features
 ~~~~~~~~~~~~
+- ``ContactFeaturizer`` now lets you use a soft_min option for closest
+contact distances.
 
 Improvements
 ~~~~~~~~~~~~
+
+- The ``stride`` parameter in ``KernelTICA`` now works as intended to automatically generate a set of landmark points (gh-972).
 
 
 v3.7 (January 26, 2017)
