@@ -1184,10 +1184,13 @@ class MultiligandContactFeaturizer(Featurizer):
         # Obtain molecules here because we find molecules with ligand
         # attached to featurize
         molecules = traj.topology.find_molecules()
+        ligmols = [m for m in molecules if any(traj.topology.residue(l).atom(0) in m \
+                                                for l in ligand_residues)]
 
         if not self.protein:
-            protein_residues = list(set([traj.topology.atom(a).residue.index \
-                                         for a in traj.topology.select("protein")]))
+            protein_residues = set([traj.topology.atom(a).residue.index \
+                                    for a in traj.topology.select("protein")]) - \
+                               set([a.residue.index for m in ligmols for a in m])
         else:
             protein_residues = self.protein
 
