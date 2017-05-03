@@ -162,7 +162,8 @@ class PCCAPlus(PCCA):
             )
 
         alpha = scipy.optimize.basinhopping(
-                obj, alpha, niter_success=1000,
+                #obj, alpha, niter_success=1000,
+                obj, alpha, niter_success=5000,
         )['x']
 
         alpha = scipy.optimize.fmin(
