@@ -325,6 +325,11 @@ class MarkovStateModel(BaseEstimator, _MappingTransformMixin,
 
         k = n_timescales + 1
         u, lv, rv = _solve_msm_eigensystem(self.transmat_, k)
+
+        # Robin: remove imaginary components of these if they're zero
+        lv  = np.real_if_close(lv, tol=1000).astype(float)
+        rv = np.real_if_close(rv, tol=1000).astype(float)
+
         self._eigenvalues = u
         self._left_eigenvectors = lv
         self._right_eigenvectors = rv
