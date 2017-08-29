@@ -84,7 +84,8 @@ def committors(sources, sinks, msm):
     return _committors(sources, sinks, msm.transmat_)
 
 
-def conditional_committors(source, sink, waypoint, msm):
+def conditional_committors(source, sink, waypoint, msm,
+                           forward_committors=None):
     """
     Computes the conditional committors :math:`q^{ABC^+}` which are is the
     probability of starting in one state and visiting state B before A while
@@ -103,6 +104,8 @@ def conditional_committors(source, sink, waypoint, msm):
         The index of the sink state
     msm : msmbuilder.MarkovStateModel
         MSM to analyze.
+    forward_committors : ndarray
+        Forward committors source->sink, if pre-calculated
 
     Returns
     -------
@@ -141,13 +144,16 @@ def conditional_committors(source, sink, waypoint, msm):
         cond_committors = np.zeros(msm.all_transmats_.shape[:2])
         for i, tprob in enumerate(msm.all_transmats_):
             cond_committors[i, :] = _conditional_committors(source, sink,
-                                                            waypoint, tprob)
+                                                            waypoint, tprob,
+                                                            forward_committors)
         return np.median(cond_committors, axis=0)
 
-    return _conditional_committors(source, sink, waypoint, msm.transmat_)
+    return _conditional_committors(source, sink, waypoint, msm.transmat_,
+                                   forward_committors)
 
 
-def _conditional_committors(source, sink, waypoint, tprob):
+def _conditional_committors(source, sink, waypoint, tprob,
+                            forward_committors=None):
     """
     Computes the conditional committors :math:`q^{ABC^+}` which are is the
     probability of starting in one state and visiting state B before A while
@@ -166,6 +172,8 @@ def _conditional_committors(source, sink, waypoint, tprob):
         The index of the sink state
     tprob : np.ndarray
         Transition matrix
+    forward_committors : ndarray
+        Forward committors source->sink, if pre-calculated
 
     Returns
     -------
@@ -185,7 +193,8 @@ def _conditional_committors(source, sink, waypoint, tprob):
 
     n_states = np.shape(tprob)[0]
 
-    forward_committors = _committors([source], [sink], tprob)
+    if forward_committors is None:
+        forward_committors = _committors([source], [sink], tprob)
 
     # permute the transition matrix into cannonical form - send waypoint the the
     # last row, and source + sink to the end after that

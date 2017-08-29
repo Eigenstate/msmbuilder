@@ -69,7 +69,8 @@ def fraction_visited(source, sink, waypoint, msm):
     """
 
     for_committors = committors([source], [sink], msm)
-    cond_committors = conditional_committors(source, sink, waypoint, msm)
+    cond_committors = conditional_committors(source, sink, waypoint, msm,
+                                             for_committors)
 
     if hasattr(msm, 'all_transmats_'):
         frac_visited = np.zeros((msm.n_states,))
