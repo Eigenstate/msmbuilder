@@ -16,7 +16,9 @@ References
 from __future__ import print_function, division, absolute_import
 import numpy as np
 
-from . import committors, conditional_committors
+#from . import committors, conditional_committors
+from msmbuilder.tpt.committor import committors
+from msmbuilder.tpt.hub_scores import conditional_committors
 
 from mdtraj.utils.six.moves import xrange
 import itertools

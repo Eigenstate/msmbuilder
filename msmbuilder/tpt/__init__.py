@@ -26,7 +26,8 @@ References
 
 from __future__ import absolute_import
 
-from .committor import committors, conditional_committors
+from .committor import committors
+from .hub_scores import conditional_committors
 from .flux import fluxes, net_fluxes
 from .hub import fraction_visited, hub_scores
 from .path import paths, top_path
