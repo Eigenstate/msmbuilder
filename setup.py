@@ -102,6 +102,12 @@ DEF OPENMP = {openmp}
     '''.format(openmp=compiler.openmp_enabled, debug=DEBUG))
 
 extensions = []
+
+extensions.append(
+    Extension('msmbuilder.tpt.hub_scores',
+              sources=[pjoin('msmbuilder', 'tpt', 'hub_scores.pyx')],
+              include_dirs=[np.get_include()]))
+
 extensions.append(
     Extension('msmbuilder.example_datasets._muller',
               sources=[pjoin('msmbuilder', 'example_datasets', '_muller.pyx')],
