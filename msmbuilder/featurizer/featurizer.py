@@ -575,7 +575,6 @@ class DihedralFeaturizer(Featurizer):
             types = [types]
         self.types = list(types)  # force a copy
         self.sincos = sincos
-        self.chains = chains
 
         known = {'phi', 'psi', 'omega', 'chi1', 'chi2', 'chi3', 'chi4'}
         if not set(types).issubset(known):
