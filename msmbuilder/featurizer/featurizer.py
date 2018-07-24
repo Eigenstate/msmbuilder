@@ -686,14 +686,23 @@ class VonMisesFeaturizer(Featurizer):
         if not isinstance(kappa, (int, float)):
             raise TypeError('kappa must be numeric.')
 
-        self.loc = np.linspace(0, 2*np.pi, n_bins)
+        self._n_bins = n_bins
+        self.loc = np.linspace(0, 2*np.pi, self.n_bins)
         self.kappa = kappa
-        self.n_bins = n_bins
 
         known = {'phi', 'psi', 'omega', 'chi1', 'chi2', 'chi3', 'chi4'}
         if not set(types).issubset(known):
             raise ValueError('angles must be a subset of %s. you supplied %s' %
                              (str(known), str(types)))
+
+    @property
+    def n_bins(self):
+        return self._n_bins
+
+    @n_bins.setter
+    def n_bins(self, x):
+        self._n_bins = x  
+        self.loc = np.linspace(0, 2*np.pi, self.n_bins)
 
     def describe_features(self, traj):
         """Return a list of dictionaries describing the dihderal features.
@@ -1118,10 +1127,12 @@ class ContactFeaturizer(Featurizer):
     soft_min_beta : float, default=20nm
         The value of beta to use for the soft_min distance option.
         Very large values might cause small contact distances to go to 0.
+    periodic : bool, default=True
+        If True, compute distances using periodic boundary conditions.
     """
 
     def __init__(self, contacts='all', scheme='closest-heavy', ignore_nonprotein=True,
-                 soft_min=False, soft_min_beta=20):
+                 soft_min=False, soft_min_beta=20, periodic=True):
         self.contacts = contacts
         self.scheme = scheme
         self.ignore_nonprotein = ignore_nonprotein
@@ -1130,6 +1141,7 @@ class ContactFeaturizer(Featurizer):
         if self.soft_min and not 'soft_min' in inspect.signature(md.compute_contacts).parameters:
             raise ValueError("Sorry but soft_min requires the latest version"
                              "of mdtraj")
+        self.periodic = periodic
 
     def _transform(self, distances):
         return distances
@@ -1159,10 +1171,12 @@ class ContactFeaturizer(Featurizer):
             distances, _ = md.compute_contacts(traj, self.contacts,
                                                self.scheme, self.ignore_nonprotein,
                                                soft_min=self.soft_min,
-                                               soft_min_beta=self.soft_min_beta)
+                                               soft_min_beta=self.soft_min_beta,
+                                               periodic=self.periodic)
         else:
             distances, _ = md.compute_contacts(traj, self.contacts,
-                                               self.scheme, self.ignore_nonprotein)
+                                               self.scheme, self.ignore_nonprotein,
+                                               periodic=self.periodic)
         return self._transform(distances)
 
 
@@ -1195,11 +1209,13 @@ class ContactFeaturizer(Featurizer):
                                                          self.scheme,
                                                          self.ignore_nonprotein,
                                                          soft_min=self.soft_min,
-                                                         soft_min_beta=self.soft_min_beta)
+                                                         soft_min_beta=self.soft_min_beta,
+                                                         periodic=self.periodic)
         else:
             distances, residue_indices = md.compute_contacts(traj[0], self.contacts,
                                                          self.scheme,
-                                                         self.ignore_nonprotein)
+                                                         self.ignore_nonprotein,
+                                                         periodic=self.periodic)
         top = traj.topology
 
         aind = []
